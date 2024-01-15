@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {font-family: Arial, Helvetica, sans-serif;}
+
+      button, .browseButton {
+        background-color: #08090F;
+        color: white;
+        padding: 5px 10px;
+        margin: 8px auto;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+      }
+      button:hover, .browseButton:hover {
+        opacity: 0.8;
+      }
+      button:disabled,
+      button[disabled] {
+        background-color: #cccccc;
+        color: #9B9B9B;
+        opacity: 1;
+        cursor: auto;
+      }
+
+      .browseButton {
+        width: 60%;
+        display: block;
+        font-size: smaller;
+      }
+
+      .uploadButtons {
+        width: 40%;
+      }
+
+      .cancelButton {
+        background-color: darkred;
+        color: white;
+      }
+
+      .containerDiv {
+        margin: auto;
+        text-align: center;
+        max-width: 400px;
+      }
+
+      #dropzoneDiv {
+        border: 4px dashed #aba9a9f6;
+        background-color: #e9e8e8;
+        border-radius: 5px;
+        padding: 1em;
+        text-align: center;
+      }
+      #dropzoneDiv p {
+        margin: 0;
+      }
+      #dropzoneDiv img {
+        opacity: 50%;
+      }
+
+      .highlightBorder {
+        border-color: goldenrod !important;
+        background-color: rgb(213, 198, 161) !important;
+      }
+
+      #fileInput {
+        display: none;
+      }
+
+      #fileDiv {
+        text-align: center;
+        margin-top: 1em;
+      }
+
+      .red {
+        color: red;
+      }
+
+      .textCentered {
+        text-align: center;
+      }
+    </style>
+
+    <title>Drag&Drop File Upload FastAPI</title>
+  </head>
+
+  <body>
+    <h1>Drag&Drop File Upload FastAPI</h1>
+
+    <div class="containerDiv">
+      <div
+        id="dropzoneDiv"
+        ondrop="onDropHandler(event);"
+        ondragenter="onDragEnterHandler(event);"
+        ondragleave="onDragLeaveHandler(event);"
+        ondragover="onDragOverHandler(event);">
+        <img src="upload.png" width="50">
+        <p>Drag a file <i>*.md</i> or:</p>
+
+        <form class="uploadForm">
+          <!--
+            Docs: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
+            To filter files: accept="image/*,.pdf".
+            To accept multiple files: multiple.
+          -->
+          <input type="file" id="fileInput" name="mdFile" accept=".md" onchange="onSelectFile(this)">
+          <label class="browseButton" for="fileInput">Open file...</label>
+        </form>
+      </div>
+
+      <div id="fileDiv"></div>
+
+      <div class="textCentered">
+        <button class="uploadButtons cancelButton" onclick="cancelUpload()" disabled>Cancel</button>
+        <button class="uploadButtons" onclick="uploadFile(); true" disabled>Upload</button>
+      </div>
+    </div>
+
+
+    <!-- JAVASCRIPT ------------------------------------------------------------------->
+    <script>
+      const dropzoneDiv = document.getElementById("dropzoneDiv");
+      const fileDiv = document.getElementById("fileDiv");
+      let selectedFile = null;
+
+      const onDocumentReady = async () => {
+        console.log("ready!");
+      };
+      document.addEventListener("DOMContentLoaded", onDocumentReady);
+
+      const onDragEnterHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.add("highlightBorder");
+      };
+
+      const onDragLeaveHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.remove("highlightBorder");
+      };
+
+      const onDropHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.remove("highlightBorder");
+        console.log("File(s) dropped");
+
+        if (event.dataTransfer.items) {
+          [...event.dataTransfer.items].forEach((item, i) => {
+            // If dropped items aren't files, reject them.
+            if (item.kind === "file") {
+              const file = item.getAsFile();
+              console.log(`File[${i}].name = ${file.name}`);
+              console.log(file);
+              showFileDetails(file);
+            }
+          });
+        } else {
+          [...event.dataTransfer.files].forEach((file, i) => {
+            console.log(`File[${i}].name = ${file.name}`);
+            console.log(file);
+            showFileDetails(file);
+          });
+        }
+      };
+
+      const onDragOverHandler = (ev) => {
+        ev.preventDefault();
+        dropzoneDiv.classList.add("highlightBorder");
+      };
+
+      const onSelectFile = (inputEl) => {
+        [...inputEl.files].forEach((file, i) => {
+          console.log(`File[${i}].name = ${file.name}`);
+          console.log(file);
+          showFileDetails(file);
+        });
+        // Set the value to null otherwise if the user selects the same file again
+        //  this fn will not trigger.
+        inputEl.value = null;
+      };
+
+      const showFileDetails = (file) => {
+        // Get file ext.
+        const ext = file.name.split(".").pop();
+
+        // If not a .md file then show error.
+        if (ext !== "md") {
+          selectedFile = null;
+          disableUploadButtons();
+          showError("Only files *.md accepted");
+          return;
+        }
+
+        // Show file details.
+        selectedFile = file;
+        enableUploadButtons();
+        showMessage(file.name);
+      };
+
+      const showMessage = (text, className) => {
+        clearMessage();
+        const span = document.createElement("span");
+        span.innerHTML = text;
+        if (className) span.setAttribute("class", className);
+        fileDiv.appendChild(span);
+      };
+
+      const clearMessage = (text, className) => {
+        fileDiv.innerHTML = "";
+      };
+
+      const showError = (text) => {
+        showMessage(text, "red");
+      };
+
+      const enableUploadButtons = () => {
+        const buttons = document.getElementsByClassName("uploadButtons");
+        [...buttons].forEach((button, i) => {
+          button.disabled = false;
+        });
+      };
+
+      const disableUploadButtons = () => {
+        const buttons = document.getElementsByClassName("uploadButtons");
+        [...buttons].forEach((button, i) => {
+          button.disabled = true;
+        });
+      };
+
+      const uploadFile = async () => {
+        if (!selectedFile) {
+          showError("No file selected");
+        }
+
+        const formData = new FormData();
+        formData.append("mdfile", selectedFile, selectedFile.name);
+
+        let response;
+        try {
+          response = await fetch("http://127.0.0.1:8000/upload/", {
+            method: "POST",
+            body: formData,
+          });
+        } catch (exc) {
+          console.log(exc);
+          showError("Cannot reach the host 127.0.0.1:8000");
+          return;
+        }
+        console.log(response);
+
+        if (response.ok) {
+          showMessage("Upload complete!");
+          disableUploadButtons();
+        } else {
+          console.log(response);
+          showError("Upload failed");
+          return;
+        }
+      };
+
+      const cancelUpload = () => {
+        selectedFile = null;
+        clearMessage();
+        disableUploadButtons();
+      };
+    </script>
+  </body>
+</html>

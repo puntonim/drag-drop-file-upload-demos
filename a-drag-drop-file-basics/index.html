@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {font-family: Arial, Helvetica, sans-serif;}
+
+      #dropzone {
+        border: 5px solid blue;
+        width: 200px;
+        height: 100px;
+      }
+
+      .yellow-border {
+        border-color: yellow !important;
+      }
+
+      #files {
+        list-style-type: none;
+        padding: 1em;
+      }
+    </style>
+
+    <title>Drag&Drop File Basics</title>
+  </head>
+
+  <body>
+    <h1>Drag&Drop File Basics</h1>
+
+    <div
+      id="dropzone"
+      ondrop="onDropHandler(event);"
+      ondragenter="onDragEnterHandler(event);"
+      ondragleave="onDragLeaveHandler(event);"
+      ondragover="onDragOverHandler(event);">
+      <p>Drag one or more files to this <i>drop zone</i>.</p>
+    </div>
+
+    <div>
+      <ul id="files"></ul>
+    </div>
+
+    <!-- JAVASCRIPT ------------------------------------------------------------------->
+    <script>
+      const dropzoneDiv = document.getElementById("dropzone");
+
+      const onDocumentReady = async () => {
+        console.log("ready!");
+      };
+      document.addEventListener("DOMContentLoaded", onDocumentReady);
+
+      const onDragEnterHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.add("yellow-border");
+      };
+
+      const onDragLeaveHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.remove("yellow-border");
+      };
+
+      const onDropHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.remove("yellow-border");
+        console.log("File(s) dropped");
+
+        if (event.dataTransfer.items) {
+          [...event.dataTransfer.items].forEach((item, i) => {
+            // If dropped items aren't files, reject them.
+            if (item.kind === "file") {
+              const file = item.getAsFile();
+              console.log(`File[${i}].name = ${file.name}`);
+              console.log(file);
+              appendFile(file.name);
+            }
+          });
+        } else {
+          [...event.dataTransfer.files].forEach((file, i) => {
+            console.log(`File[${i}].name = ${file.name}`);
+            console.log(file);
+            appendFile(file.name);
+          });
+        }
+      };
+      const onDragOverHandler = (ev) => {
+        ev.preventDefault();
+        dropzoneDiv.classList.add("yellow-border");
+      };
+
+      const appendFile = (text) => {
+        const ul = document.getElementById("files");
+        const li = document.createElement("li");
+        const content = document.createTextNode(text);
+        li.appendChild(content);
+        ul.appendChild(li);
+      }
+    </script>
+  </body>
+</html>

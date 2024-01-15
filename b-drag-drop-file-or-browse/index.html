@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {font-family: Arial, Helvetica, sans-serif;}
+
+      .browseButton {
+        background-color: #08090F;
+        color: white;
+        padding: 5px 10px;
+        margin: 8px auto;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        width: 60%;
+        display: block;
+        font-size: smaller;
+      }
+      .browseButton:hover {
+        opacity: 0.8;
+      }
+
+      #dropzoneDiv {
+        border: 4px dashed #aba9a9f6;
+        background-color: #e9e8e8;
+        border-radius: 5px;
+        max-width: 400px;
+        /* height: 100px; */
+        margin: auto;
+        padding: 1em;
+        text-align: center;
+      }
+      #dropzoneDiv p {
+        margin: 0;
+      }
+      #dropzoneDiv img {
+        opacity: 50%;
+      }
+
+      .highlightBorder {
+        border-color: goldenrod !important;
+        background-color: rgb(213, 198, 161) !important;
+      }
+
+      #filesUl {
+        list-style-type: none;
+        padding: 1em;
+        text-align: center;
+      }
+
+      #fileInput {
+        display: none;
+      }
+    </style>
+
+    <title>Drag&Drop File Or Browse</title>
+  </head>
+
+  <body>
+    <h1>Drag&Drop File Or Browse</h1>
+
+    <div
+      id="dropzoneDiv"
+      ondrop="onDropHandler(event);"
+      ondragenter="onDragEnterHandler(event);"
+      ondragleave="onDragLeaveHandler(event);"
+      ondragover="onDragOverHandler(event);">
+      <img src="upload.png" width="50">
+      <p>Drag files here or:</p>
+
+      <form class="uploadForm">
+        <!--
+          Docs: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
+          To filter files: accept="image/*,.pdf".
+          To accept multiple files: multiple.
+        -->
+        <input type="file" id="fileInput" onchange="onSelectFile(this.files)">
+        <label class="browseButton" for="fileInput">Open file...</label>
+      </form>
+      
+      
+    </div>
+
+    <div>
+      <ul id="filesUl"></ul>
+    </div>
+
+    <!-- JAVASCRIPT ------------------------------------------------------------------->
+    <script>
+      const dropzoneDiv = document.getElementById("dropzoneDiv");
+
+      const onDocumentReady = async () => {
+        console.log("ready!");
+      };
+      document.addEventListener("DOMContentLoaded", onDocumentReady);
+
+      const onDragEnterHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.add("highlightBorder");
+      };
+
+      const onDragLeaveHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.remove("highlightBorder");
+      };
+
+      const onDropHandler = (event) => {
+        event.preventDefault();
+        dropzoneDiv.classList.remove("highlightBorder");
+        console.log("File(s) dropped");
+
+        if (event.dataTransfer.items) {
+          [...event.dataTransfer.items].forEach((item, i) => {
+            // If dropped items aren't files, reject them.
+            if (item.kind === "file") {
+              const file = item.getAsFile();
+              console.log(`File[${i}].name = ${file.name}`);
+              console.log(file);
+              appendFileDetails(file.name);
+            }
+          });
+        } else {
+          [...event.dataTransfer.files].forEach((file, i) => {
+            console.log(`File[${i}].name = ${file.name}`);
+            console.log(file);
+            appendFileDetails(file.name);
+          });
+        }
+      };
+
+      const onDragOverHandler = (ev) => {
+        ev.preventDefault();
+        dropzoneDiv.classList.add("highlightBorder");
+      };
+
+      const onSelectFile = (selectedFiles) => {
+        [...selectedFiles].forEach((file, i) => {
+          console.log(`File[${i}].name = ${file.name}`);
+          console.log(file);
+          appendFileDetails(file.name);
+        });
+      };
+
+      const appendFileDetails = (text) => {
+        const ul = document.getElementById("filesUl");
+        const li = document.createElement("li");
+        const content = document.createTextNode(text);
+        li.appendChild(content);
+        ul.appendChild(li);
+      };
+    </script>
+  </body>
+</html>
